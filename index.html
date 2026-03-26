@@ -16,11 +16,22 @@ body{font-family:'DM Sans',sans-serif;background:#fdf9f6;color:#1a1a18;min-heigh
 .tabs{display:flex;gap:4px;margin-bottom:1.5rem;background:#f0e8e0;padding:4px;border-radius:12px;}
 .tab{flex:1;padding:9px 12px;border:none;background:transparent;cursor:pointer;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:500;color:#9a7e6f;border-radius:8px;transition:all 0.15s;}
 .tab.active{background:#fff;color:#1a1a18;border:1px solid #d4b8a8;box-shadow:0 1px 3px rgba(0,0,0,0.06);}
-.venue-select-row{display:flex;gap:8px;align-items:center;margin-bottom:1.25rem;}
-.venue-select-row select{flex:1;font-family:'DM Sans',sans-serif;font-size:15px;padding:10px 12px;border:1px solid #ddd;border-radius:8px;background:#fff;color:#1a1a18;appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23888' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center;}
-.venue-select-row select:focus{outline:none;border-color:#999;}
-.add-btn{padding:9px 16px;background:#fff;border:1px solid #ddd;border-radius:8px;cursor:pointer;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:500;color:#1a1a18;white-space:nowrap;}
-.add-btn:hover{background:#f5f5f3;}
+.venue-select-row{position:relative;margin-bottom:1.25rem;}
+.venue-search-input{width:100%;font-family:'DM Sans',sans-serif;font-size:15px;padding:10px 72px 10px 12px;border:1px solid #ddd;border-radius:8px;background:#fff;color:#1a1a18;outline:none;box-sizing:border-box;}
+.venue-search-input:focus{border-color:#c4622a;}
+.venue-search-clear{position:absolute;right:40px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;font-size:16px;color:#bbb;line-height:1;display:none;}
+.venue-search-clear:hover{color:#888;}
+.venue-browse-btn{position:absolute;right:0;top:0;bottom:0;width:36px;background:#f5ede6;border:1px solid #ddd;border-left:none;border-radius:0 8px 8px 0;cursor:pointer;font-size:15px;color:#c4622a;display:flex;align-items:center;justify-content:center;transition:background 0.15s;}
+.venue-browse-btn:hover{background:#fdf0ea;}
+.venue-browse-btn.open{background:#c4622a;color:#fff;border-color:#c4622a;}
+.venue-dropdown{position:absolute;top:calc(100% + 4px);left:0;right:0;background:#fff;border:1px solid #ddd;border-radius:8px;box-shadow:0 4px 16px rgba(0,0,0,0.1);z-index:40;max-height:260px;overflow-y:auto;display:none;}
+.venue-dropdown-item{padding:10px 14px;cursor:pointer;font-size:14px;color:#1a1a18;border-bottom:1px solid #f5f0ea;}
+.venue-dropdown-item:last-child{border-bottom:none;}
+.venue-dropdown-item:hover,.venue-dropdown-item.active{background:#fdf0ea;color:#c4622a;}
+.venue-dropdown-empty{padding:12px 14px;font-size:13px;color:#aaa;font-style:italic;}
+.venue-selected-tag{display:inline-flex;align-items:center;gap:6px;background:#fdf0ea;border:1px solid #e8c4a8;border-radius:20px;padding:4px 10px 4px 13px;font-size:13px;color:#c4622a;font-weight:500;margin-bottom:0.875rem;}
+.venue-selected-tag button{background:none;border:none;cursor:pointer;font-size:15px;color:#c4622a;line-height:1;padding:0;}
+@media(max-width:600px){.venue-search-input{font-size:16px;padding-right:72px;}.venue-dropdown-item{padding:12px 14px;}}
 .placeholder{text-align:center;padding:4rem 2rem;color:#888;font-size:15px;line-height:1.7;}
 .venue-card{background:#fff;border:1px solid #e5e3de;border-radius:12px;overflow:hidden;}
 .venue-title-bar{padding:1rem 1.25rem;border-bottom:1px solid #e5e3de;display:flex;justify-content:space-between;align-items:flex-start;gap:12px;}
@@ -110,7 +121,6 @@ body{font-family:'DM Sans',sans-serif;background:#fdf9f6;color:#1a1a18;min-heigh
   #tab-lookup{padding:0 0.75rem;}
   #tab-feedback{padding:0 0.75rem;}
   .venue-select-row{margin-bottom:1rem;}
-  .venue-select-row select{font-size:14px;padding:10px 10px;}
   .placeholder{padding:3rem 1.25rem;}
 
   /* Venue title bar — stack buttons below title on mobile */
@@ -222,8 +232,15 @@ body{font-family:'DM Sans',sans-serif;background:#fdf9f6;color:#1a1a18;min-heigh
   </div>
   <div id="tab-lookup">
     <div class="venue-select-row">
-      <select id="venue-select" onchange="selectVenue(this.value)"></select>
+      <input type="text" id="venue-search" class="venue-search-input" placeholder="Type a town or venue name — or browse all ↓" autocomplete="off"
+        oninput="filterVenues(this.value)"
+        onfocus="showDropdown()"
+        onkeydown="handleVenueKey(event)">
+      <button class="venue-search-clear" id="venue-search-clear" onclick="clearVenueSearch()">×</button>
+      <button class="venue-browse-btn" id="venue-browse-btn" onclick="toggleBrowseAll()" title="Browse all venues">☰</button>
+      <div class="venue-dropdown" id="venue-dropdown"></div>
     </div>
+    <div id="venue-selected-tag-container"></div>
     <div id="venue-display"><div class="placeholder">Select a venue above to see everything you need before covering a class.<br><br><span style="font-size:14px;color:#c4622a;font-style:italic;font-weight:500;">Because 'I'll just wing it' is not a birth plan.</span></div></div>
   </div>
   <div id="tab-feedback" style="display:none;"><div id="fb-wrap"></div></div>
@@ -299,8 +316,8 @@ async function init(){
 }
 
 async function loadVenuesFromSheet(){
-  const sel=document.getElementById('venue-select');
-  sel.innerHTML='<option value="">Loading venues…</option>';
+  const input=document.getElementById('venue-search');
+  if(input){input.placeholder='Loading venues…';input.disabled=true;}
   try{
     const res=await fetch(SHEET_API_URL+'?action=getAll');
     const data=await res.json();
@@ -309,22 +326,100 @@ async function loadVenuesFromSheet(){
       refreshSelect();
     }
   }catch(e){
-    // Fallback — if sheet not configured yet, show empty state
     venues={};
     refreshSelect();
     console.warn('Could not load from Google Sheets:',e);
+  }finally{
+    if(input){input.placeholder='Type a town or venue name to search…';input.disabled=false;}
   }
 }
 
 function refreshSelect(){
-  const sel=document.getElementById('venue-select');
-  const cur=sel.value;
-  sel.innerHTML='<option value="">— Select a venue —</option>';
-  Object.keys(venues).sort().forEach(k=>{
-    const o=document.createElement('option');
-    o.value=k;o.textContent=k;sel.appendChild(o);
-  });
-  if(cur&&venues[cur])sel.value=cur;
+  // Rebuild dropdown with all venues — called after load/save
+  filterVenues(document.getElementById('venue-search')?.value||'');
+}
+
+function filterVenues(query){
+  const dropdown=document.getElementById('venue-dropdown');
+  const clear=document.getElementById('venue-search-clear');
+  if(!dropdown)return;
+  const q=query.trim().toLowerCase();
+  const keys=Object.keys(venues).sort();
+  const matches=q?keys.filter(k=>k.toLowerCase().includes(q)||(venues[k].postcode||'').toLowerCase().includes(q)||(venues[k].address||'').toLowerCase().includes(q)):keys;
+  if(clear)clear.style.display=q?'block':'none';
+  if(!keys.length){dropdown.innerHTML='<div class="venue-dropdown-empty">No venues added yet — use + Add Venue</div>';dropdown.style.display='block';return;}
+  if(!matches.length){dropdown.innerHTML='<div class="venue-dropdown-empty">No venues match "'+query+'"</div>';dropdown.style.display='block';return;}
+  dropdown.innerHTML=matches.map((k,i)=>`<div class="venue-dropdown-item" data-key="${k}" onmousedown="pickVenue('${k.replace(/'/g,"\\'")}')"><strong>${highlightMatch(k,q)}</strong>${venues[k].address?'<br><span style="font-size:11px;color:#aaa">'+venues[k].address+(venues[k].postcode?', '+venues[k].postcode:'')+'</span>':''}</div>`).join('');
+  dropdown.style.display='block';
+}
+
+function highlightMatch(str,q){
+  if(!q)return str;
+  const i=str.toLowerCase().indexOf(q);
+  if(i<0)return str;
+  return str.slice(0,i)+'<mark style="background:#fdf0ea;color:#c4622a;border-radius:2px;">'+str.slice(i,i+q.length)+'</mark>'+str.slice(i+q.length);
+}
+
+function showDropdown(){
+  filterVenues(document.getElementById('venue-search')?.value||'');
+}
+
+function toggleBrowseAll(){
+  const dropdown=document.getElementById('venue-dropdown');
+  const btn=document.getElementById('venue-browse-btn');
+  if(!dropdown)return;
+  if(dropdown.style.display==='block'){
+    hideDropdown();
+    btn&&btn.classList.remove('open');
+  }else{
+    // Show full list regardless of search input
+    document.getElementById('venue-search').value='';
+    document.getElementById('venue-search-clear').style.display='none';
+    filterVenues('');
+    btn&&btn.classList.add('open');
+    document.getElementById('venue-search').focus();
+  }
+}
+
+function hideDropdown(){
+  const d=document.getElementById('venue-dropdown');
+  if(d)d.style.display='none';
+  document.getElementById('venue-browse-btn')?.classList.remove('open');
+}
+
+function pickVenue(key){
+  selectVenue(key);
+  const input=document.getElementById('venue-search');
+  if(input)input.value='';
+  const clear=document.getElementById('venue-search-clear');
+  if(clear)clear.style.display='none';
+  hideDropdown();
+  // Show selected tag
+  const tc=document.getElementById('venue-selected-tag-container');
+  if(tc)tc.innerHTML=`<div class="venue-selected-tag">${key}<button onclick="clearVenueSearch()">×</button></div>`;
+}
+
+function clearVenueSearch(){
+  const input=document.getElementById('venue-search');
+  if(input){input.value='';input.focus();}
+  const clear=document.getElementById('venue-search-clear');
+  if(clear)clear.style.display='none';
+  const tc=document.getElementById('venue-selected-tag-container');
+  if(tc)tc.innerHTML='';
+  hideDropdown();
+  selectVenue('');
+}
+
+function handleVenueKey(e){
+  const dropdown=document.getElementById('venue-dropdown');
+  if(!dropdown||dropdown.style.display==='none')return;
+  const items=dropdown.querySelectorAll('.venue-dropdown-item');
+  const active=dropdown.querySelector('.venue-dropdown-item.active');
+  let idx=Array.from(items).indexOf(active);
+  if(e.key==='ArrowDown'){e.preventDefault();idx=Math.min(idx+1,items.length-1);items.forEach((el,i)=>el.classList.toggle('active',i===idx));items[idx]?.scrollIntoView({block:'nearest'});}
+  else if(e.key==='ArrowUp'){e.preventDefault();idx=Math.max(idx-1,0);items.forEach((el,i)=>el.classList.toggle('active',i===idx));items[idx]?.scrollIntoView({block:'nearest'});}
+  else if(e.key==='Enter'){e.preventDefault();const a=dropdown.querySelector('.active');if(a)pickVenue(a.dataset.key);}
+  else if(e.key==='Escape'){hideDropdown();}
 }
 
 function switchTab(t){
@@ -725,8 +820,7 @@ async function saveVenue(){
   }catch(e){console.warn('Sheet save failed:',e);}
   refreshSelect();closeModal();
   if(btn){btn.textContent='Save venue';btn.disabled=false;}
-  document.getElementById('venue-select').value=nm;
-  selectVenue(nm);
+  pickVenue(nm);
 }
 
 function closeModal(){document.getElementById('modal-overlay').style.display='none';}
@@ -775,10 +869,14 @@ async function submitFeedback(){
       <h3>Venue saved!</h3>
       <p><strong>${nm}</strong> has been added to the hub.</p>
       <br><br>
-      <button class="btn-s" onclick="renderFeedbackForm();switchTab('lookup');document.getElementById('venue-select').value='${nm.replace(/'/g,"\\'")}';selectVenue('${nm.replace(/'/g,"\\'")}')">View venue sheet →</button>
+      <button class="btn-s" onclick="renderFeedbackForm();switchTab('lookup');pickVenue('${nm.replace(/'/g,"\\'")}')">View venue sheet →</button>
       <button class="btn-p" style="margin-left:8px" onclick="renderFeedbackForm()">Add another venue</button>
     </div>`;
 }
+
+document.addEventListener('click',function(e){
+  if(!e.target.closest('.venue-select-row'))hideDropdown();
+});
 
 init();
 </script>
