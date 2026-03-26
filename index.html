@@ -213,6 +213,22 @@ body{font-family:'DM Sans',sans-serif;background:#fdf9f6;color:#1a1a18;min-heigh
 .header-nav a:hover{background:#fff;color:#c4622a;border-color:#c4622a;}
 .header-nav-divider{width:4px;height:4px;border-radius:50%;background:#ddd;}
 @media(max-width:600px){.header-nav{gap:5px;}.header-nav a{font-size:11px;padding:5px 11px;}}
+.fg input::placeholder,.fg textarea::placeholder{font-style:italic;color:#bbb;}
+.form-grp input::placeholder,.form-grp textarea::placeholder{font-style:italic;color:#bbb;}
+.report-bar{text-align:center;padding:1.5rem 1rem 0.5rem;}
+.report-btn{background:transparent;border:1px solid #e0d4cc;border-radius:20px;padding:7px 18px;font-family:'DM Sans',sans-serif;font-size:12px;color:#9a7e6f;cursor:pointer;transition:all 0.15s;}
+.report-btn:hover{border-color:#c4622a;color:#c4622a;background:#fdf9f6;}
+.report-modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.45);display:flex;align-items:center;justify-content:center;padding:1.5rem;z-index:200;}
+.report-modal{background:#fff;border-radius:12px;border:1px solid #e5e3de;width:100%;max-width:480px;box-shadow:0 8px 32px rgba(0,0,0,0.12);}
+.report-modal-header{padding:1rem 1.25rem;border-bottom:1px solid #e5e3de;display:flex;justify-content:space-between;align-items:center;}
+.report-modal-header h3{font-family:'DM Serif Display',serif;font-size:18px;font-weight:400;}
+.report-modal-body{padding:1.25rem;display:flex;flex-direction:column;gap:0.875rem;}
+.report-modal-body p{font-size:13px;color:#777;line-height:1.6;}
+.report-modal-body textarea{font-family:'DM Sans',sans-serif;font-size:13px;width:100%;padding:9px 11px;border:1px solid #ddd;border-radius:8px;color:#1a1a18;resize:vertical;min-height:100px;}
+.report-modal-body textarea:focus{outline:none;border-color:#c4622a;}
+.report-modal-body textarea::placeholder{font-style:italic;color:#bbb;}
+.report-modal-footer{padding:0.875rem 1.25rem;border-top:1px solid #e5e3de;display:flex;gap:8px;justify-content:flex-end;}
+@media(max-width:600px){.report-modal-overlay{align-items:flex-end;padding:0;}.report-modal{border-radius:16px 16px 0 0;}}
 </style>
 </head>
 <body>
@@ -251,56 +267,77 @@ body{font-family:'DM Sans',sans-serif;background:#fdf9f6;color:#1a1a18;min-heigh
       <div class="modal-footer"><button class="btn-s" onclick="closeModal()">Cancel</button><button class="btn-p" onclick="saveVenue()">Save venue</button></div>
     </div>
   </div>
+  <div id="report-modal-overlay" class="report-modal-overlay" style="display:none;" onclick="if(event.target.id==='report-modal-overlay')closeReportIssue()">
+    <div class="report-modal">
+      <div class="report-modal-header"><h3>Report an issue</h3><button class="modal-close" onclick="closeReportIssue()">×</button></div>
+      <div class="report-modal-body">
+        <p>Spotted something out of date or inaccurate? Let us know and we'll get it updated. Every correction helps the next course host.</p>
+        <textarea id="report-text" placeholder="e.g. The car park mentioned is now pay-and-display only. The door code has changed. The WiFi password no longer works…" rows="4"></textarea>
+      </div>
+      <div class="report-modal-footer">
+        <button class="btn-s" onclick="closeReportIssue()">Cancel</button>
+        <button class="btn-p" id="report-submit-btn" onclick="submitReport()">Send feedback</button>
+      </div>
+    </div>
+  </div>
 </div>
 
 <script>
 const SECTIONS=[
   {id:'venue_access',icon:'🏠',title:'Venue & access',fields:[
-    {key:'venue_name',label:'Venue name',type:'input'},{key:'address',label:'Full address',type:'input'},
-    {key:'postcode',label:'Postcode',type:'input'},{key:'maps_link',label:'Google Maps link',type:'input'},
-    {key:'room_location',label:'Room location',type:'textarea'},{key:'entry_instructions',label:'Entry instructions',type:'textarea'},
-    {key:'reception_contact',label:'Reception contact',type:'input'},{key:'access_time',label:'Access time',type:'input'},
-    {key:'arrival_time',label:'Participant arrival time',type:'input'},
+    {key:'venue_name',label:'Venue name',type:'input',ph:'e.g. Tunbridge Wells Yoga Studio'},
+    {key:'address',label:'Full address',type:'input',ph:'e.g. 12 Mount Pleasant Road, Tunbridge Wells'},
+    {key:'postcode',label:'Postcode',type:'input',ph:'e.g. TN1 1QQ'},
+    {key:'maps_link',label:'Google Maps link',type:'input',ph:'Paste a Google Maps URL for the exact pin location'},
+    {key:'room_location',label:'Room location within venue',type:'textarea',ph:'e.g. Ground floor, second door on the left after reception. Look for the HPHB sign on the door.'},
+    {key:'entry_instructions',label:'Entry instructions',type:'textarea',ph:'e.g. Main entrance on Mount Pleasant Road. Ring the buzzer marked "Studio". Door code is 1234.'},
+    {key:'reception_contact',label:'Reception / venue contact',type:'input',ph:'e.g. Sarah — 07712 334 221'},
+    {key:'access_time',label:'How early can you access?',type:'input',ph:'e.g. 45 minutes before class start'},
+    {key:'arrival_time',label:'When do participants arrive?',type:'input',ph:'e.g. Participants typically arrive 5–10 mins early'},
   ]},
   {id:'parking',icon:'🚗',title:'Parking & transport',fields:[
-    {key:'parking_location',label:'Parking location',type:'textarea'},{key:'parking_cost',label:'Cost & restrictions',type:'input'},
-    {key:'parking_backup',label:'Backup parking',type:'textarea'},{key:'public_transport',label:'Nearest public transport',type:'textarea'},
-    {key:'transport_issues',label:'Common issues',type:'textarea'},
+    {key:'parking_location',label:'Best parking option',type:'textarea',ph:'e.g. Free 2-hour street parking on Mount Pleasant Road. Closest paid car park is the Crescent Road NCP (3 min walk).'},
+    {key:'parking_cost',label:'Parking cost & time limits',type:'input',ph:'e.g. Street parking free up to 2hrs. NCP £2.50/hr — pay by phone or machine.'},
+    {key:'parking_backup',label:'Backup parking if main is full',type:'textarea',ph:'e.g. Sainsbury\'s car park on Goods Station Road — 10 min walk, free with receipt.'},
+    {key:'public_transport',label:'Nearest public transport',type:'textarea',ph:'e.g. Tunbridge Wells station: 8 min walk. Bus routes 291 and 208 stop on Mount Pleasant Road (2 min walk).'},
+    {key:'transport_issues',label:'Known transport issues to flag',type:'textarea',ph:'e.g. Street parking fills up quickly on Saturday mornings — arrive early or use the NCP.'},
   ]},
   {id:'room_setup',icon:'🪑',title:'Room setup',fields:[
-    {key:'setup_type',label:'Pre-set or self-setup?',type:'input'},{key:'layout',label:'Layout style',type:'input'},
-    {key:'equipment_storage',label:'Equipment storage',type:'textarea'},{key:'setup_time',label:'Setup/reset time needed',type:'input'},
+    {key:'setup_type',label:'Is the room pre-set or do you set up?',type:'input',ph:'e.g. Pre-set by venue staff. You just need to arrange chairs into a circle.'},
+    {key:'layout',label:'Layout style',type:'input',ph:'e.g. Circle of chairs with mats in the centre for practicals'},
+    {key:'equipment_storage',label:'Where is equipment stored?',type:'textarea',ph:'e.g. Teaching kit stored in the blue cupboard in the corner of the room. Ask reception for the key.'},
+    {key:'setup_time',label:'How long does setup/reset take?',type:'input',ph:'e.g. Allow 15 mins for setup, 10 mins to reset at the end'},
   ]},
   {id:'it',icon:'💻',title:'IT & equipment',fields:[
-    {key:'av_setup',label:'Projector / screen / TV',type:'input'},{key:'wifi',label:'WiFi details',type:'input'},
-    {key:'tech_issues',label:'Known issues',type:'textarea'},{key:'extension_leads',label:'Extension leads needed?',type:'input'},
-    {key:'tech_backup',label:'Backup plan if tech fails',type:'textarea'},
+    {key:'av_setup',label:'Screen / TV / projector',type:'input',ph:'e.g. 65" wall-mounted TV. HDMI cable in the equipment cupboard. No Apple adapter — bring your own.'},
+    {key:'wifi',label:'WiFi name & password',type:'input',ph:'e.g. Network: StudioGuest / Password: welcome2024'},
+    {key:'tech_issues',label:'Known tech issues',type:'textarea',ph:'e.g. TV occasionally loses HDMI signal — unplug and replug the cable to reset.'},
+    {key:'extension_leads',label:'Extension leads / adapters needed?',type:'input',ph:'e.g. One extension lead available in the cupboard. Bring your own if you need more than one socket.'},
   ]},
-
   {id:'facilities',icon:'🚻',title:'Facilities',fields:[
-    {key:'toilets',label:'Toilets & accessibility',type:'textarea'},{key:'kitchen',label:'Kitchen / water access',type:'input'},
-    {key:'food_policy',label:'Food & drink policy',type:'input'},{key:'break_info',label:'Break arrangements',type:'input'},
+    {key:'toilets',label:'Toilets & accessibility',type:'textarea',ph:'e.g. Accessible toilet on ground floor near reception. Additional toilets up one flight of stairs.'},
+    {key:'kitchen',label:'Kitchen / water access',type:'input',ph:'e.g. Small kitchen area off the main corridor — kettle, fridge, mugs available.'},
+    {key:'food_policy',label:'Food & drink policy',type:'input',ph:'e.g. Water and hot drinks allowed in the room. No food.'},
   ]},
-
-
   {id:'maternity',icon:'🏥',title:'Local maternity services',fields:[
-    {key:'nearest_hospitals',label:'Nearest hospitals / birth units',type:'textarea'},{key:'home_birth',label:'Home birth availability',type:'input'},
-    {key:'key_policies',label:'Key policies',type:'textarea'},{key:'transfer_times',label:'Transfer times',type:'input'},
+    {key:'nearest_hospitals',label:'Nearest hospitals & birth units',type:'textarea',ph:'e.g. Tunbridge Wells Hospital (Pembury) — 3 miles, 10 min drive. Maidstone Hospital — 14 miles. Both have consultant-led and midwife-led units.'},
+    {key:'home_birth',label:'Home birth availability',type:'input',ph:'e.g. Available via West Kent Community Midwives — 0300 123 1807'},
   ]},
   {id:'feeding',icon:'🤱',title:'Infant feeding support',fields:[
-    {key:'bf_clinics',label:'Breastfeeding clinics & groups',type:'textarea'},{key:'feeding_contacts',label:'Infant feeding contacts',type:'textarea'},
-    {key:'notable_feeding',label:'Notable services',type:'textarea'},
+    {key:'bf_clinics',label:'Breastfeeding clinics & drop-ins',type:'textarea',ph:'e.g. Tunbridge Wells Breastfeeding Café — Tuesdays 10–12 at the Children\'s Centre, Grosvenor Road. No booking needed.'},
+    {key:'feeding_contacts',label:'Infant feeding contacts',type:'textarea',ph:'e.g. West Kent infant feeding team: 01622 225955. La Leche League local group: lllgb.org.uk'},
   ]},
-
   {id:'contacts',icon:'📞',title:'Key contacts',fields:[
-    {key:'course_host',label:'Course host contact',type:'input'},{key:'venue_contact',label:'Venue contact',type:'input'},
-    {key:'it_support',label:'IT support',type:'input'},{key:'emergency_access',label:'Emergency access contact',type:'input'},
+    {key:'course_host',label:'Course host',type:'input',ph:'e.g. Jemima Clarke — jemima@hphb.co.uk / 07891 221 334'},
+    {key:'venue_contact',label:'Venue contact',type:'input',ph:'e.g. Reception — 01892 123456 (available Mon–Sat 8am–6pm)'},
+    {key:'it_support',label:'IT / tech support',type:'input',ph:'e.g. Venue tech support: ask at reception. For HPHB kit issues call Emma: 07700 900123'},
+    {key:'emergency_access',label:'Emergency access contact',type:'input',ph:'e.g. Out-of-hours venue emergency: 07900 112233'},
   ]},
   {id:'troubleshooting',icon:'🔧',title:'Troubleshooting & tips',fields:[
-    {key:'common_problems',label:'Common problems & solutions',type:'textarea'},{key:'past_issues',label:'Past issues',type:'textarea'},
-    {key:'wish_id_known',label:"What I wish I'd known",type:'textarea',warn:true},
+    {key:'common_problems',label:'Common problems & solutions',type:'textarea',ph:'e.g. Door sometimes sticks — push firmly rather than pull. If the projector won\'t connect, restart it at the wall.'},
+    {key:'past_issues',label:'Things that have caught people out',type:'textarea',ph:'e.g. The car park barrier was out of order one Saturday — have a backup plan. Heating can be noisy during warm-up, just wait 5 mins.'},
+    {key:'wish_id_known',label:"What I wish I'd known",type:'textarea',ph:'e.g. The nearest coffee shop (The Pantiles Café) shuts at 9am on Sundays — grab one before you leave home!',warn:true},
   ]},
-
 ];
 
 // ── Google Sheets config ─────────────────────────────────────────────────────
@@ -466,6 +503,7 @@ function renderVenue(key){
       </div>
       <div class="section-nav">${pillsHtml}</div>
       <div class="sections-body">${secsHtml}</div>
+      <div class="report-bar"><button class="report-btn" onclick="openReportIssue('${key.replace(/'/g,"\\'")}')">⚑ Report an issue with this venue info</button></div>
     </div>`;
 }
 
@@ -788,13 +826,16 @@ function openAdd(){editingKey=null;document.getElementById('modal-title').textCo
 function openEdit(key){editingKey=key;document.getElementById('modal-title').textContent='Edit: '+key;buildModalForm(venues[key]||{});document.getElementById('modal-overlay').style.display='flex';}
 
 function buildModalForm(v){
-  let h=`<div class="fg"><label>Venue display name (shown in dropdown)</label><input id="f__name" type="text" value="${editingKey||''}" placeholder="e.g. Brighton – Hove Community Centre"></div>`;
+  let h=`<div class="fg"><label>Venue display name (shown in dropdown)</label><input id="f__name" type="text" value="${editingKey||''}" placeholder="e.g. Tunbridge Wells – The Yoga Studio"></div>`;
   SECTIONS.forEach(s=>{
     h+=`<div class="msec">${s.icon} ${s.title}</div>`;
     s.fields.forEach(f=>{
       const val=(v[f.key]||'').replace(/"/g,'&quot;');
+      const ph=f.ph||'';
       h+=`<div class="fg"><label>${f.label}</label>`;
-      h+=f.type==='textarea'?`<textarea id="f_${f.key}">${v[f.key]||''}</textarea>`:`<input id="f_${f.key}" type="text" value="${val}">`;
+      h+=f.type==='textarea'
+        ?`<textarea id="f_${f.key}" placeholder="${ph}">${v[f.key]||''}</textarea>`
+        :`<input id="f_${f.key}" type="text" value="${val}" placeholder="${ph}">`;
       h+=`</div>`;
     });
   });
@@ -835,7 +876,7 @@ function renderFeedbackForm(){
     h+=`<div class="form-sec"><div class="form-sec-title">${sec.icon} ${sec.title}</div>`;
     sec.fields.forEach(f=>{
       h+=`<div class="form-grp"><label>${f.label}</label>`;
-      h+=f.type==='textarea'?`<textarea id="fv_${f.key}" placeholder=""></textarea>`:`<input type="text" id="fv_${f.key}">`;
+      h+=f.type==='textarea'?`<textarea id="fv_${f.key}" placeholder="${f.ph||''}"></textarea>`:`<input type="text" id="fv_${f.key}" placeholder="${f.ph||''}">`;
       h+=`</div>`;
     });
     h+=`</div>`;
@@ -872,6 +913,40 @@ async function submitFeedback(){
       <button class="btn-s" onclick="renderFeedbackForm();switchTab('lookup');pickVenue('${nm.replace(/'/g,"\\'")}')">View venue sheet →</button>
       <button class="btn-p" style="margin-left:8px" onclick="renderFeedbackForm()">Add another venue</button>
     </div>`;
+}
+
+// ── Report issue ─────────────────────────────────────────────────────────────
+let reportingVenueKey=null;
+function openReportIssue(key){
+  reportingVenueKey=key;
+  document.getElementById('report-text').value='';
+  document.getElementById('report-modal-overlay').style.display='flex';
+}
+function closeReportIssue(){
+  document.getElementById('report-modal-overlay').style.display='none';
+}
+function submitReport(){
+  const text=document.getElementById('report-text').value.trim();
+  if(!text){document.getElementById('report-text').focus();return;}
+  const btn=document.getElementById('report-submit-btn');
+  btn.textContent='Sending…';btn.disabled=true;
+  // Append feedback as a note in the troubleshooting wish_id_known field
+  const venue=venues[reportingVenueKey];
+  if(venue){
+    const date=new Date().toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'});
+    const existing=venue.wish_id_known||'';
+    venue.wish_id_known=existing?existing+'\n\n[Issue reported '+date+']: '+text:'[Issue reported '+date+']: '+text;
+    // Save back to sheet
+    fetch(SHEET_API_URL,{method:'POST',headers:{'Content-Type':'text/plain'},body:JSON.stringify({action:'save',name:reportingVenueKey,oldName:reportingVenueKey,data:venue})})
+      .catch(e=>console.warn('Report save failed:',e));
+  }
+  setTimeout(()=>{
+    closeReportIssue();
+    btn.textContent='Send feedback';btn.disabled=false;
+    // Show brief confirmation
+    const bar=document.querySelector('.report-bar');
+    if(bar){const orig=bar.innerHTML;bar.innerHTML='<span style="font-size:12px;color:#c4622a;">✓ Thanks — your feedback has been noted.</span>';setTimeout(()=>{bar.innerHTML=orig;},3000);}
+  },600);
 }
 
 document.addEventListener('click',function(e){
