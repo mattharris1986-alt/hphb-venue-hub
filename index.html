@@ -1,3 +1,6 @@
+Index · HTML
+Copy
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -198,6 +201,11 @@ body{font-family:'DM Sans',sans-serif;background:#fdf9f6;color:#1a1a18;min-heigh
 .journey-links{margin-top:0.75rem;display:flex;gap:8px;flex-wrap:wrap;}
 .journey-link{font-size:11px;color:#c4622a;text-decoration:none;border:1px solid #e8c4a8;border-radius:20px;padding:4px 11px;}
 .journey-link:hover{background:#fdf0ea;}
+.header-nav{display:flex;align-items:center;justify-content:center;gap:6px;margin-top:10px;}
+.header-nav a{font-size:12px;font-weight:500;color:#fff;background:#c4622a;text-decoration:none;padding:5px 14px;border:1px solid #c4622a;border-radius:20px;transition:all 0.15s;}
+.header-nav a:hover{background:#fff;color:#c4622a;border-color:#c4622a;}
+.header-nav-divider{width:4px;height:4px;border-radius:50%;background:#ddd;}
+@media(max-width:600px){.header-nav{gap:5px;}.header-nav a{font-size:11px;padding:5px 11px;}}
 </style>
 </head>
 <body>
@@ -205,6 +213,11 @@ body{font-family:'DM Sans',sans-serif;background:#fdf9f6;color:#1a1a18;min-heigh
   <div class="header">
     <img src="https://happyparentshappybaby.com/wp-content/uploads/2024/11/HPHB-Logo-vertical-06.png" alt="Happy Parents Happy Baby" class="header-logo">
     <p>Course Host Venue Info</p>
+    <nav class="header-nav">
+      <a href="https://happyparentshappybaby.com/" target="_blank">Main Website</a>
+      <div class="header-nav-divider"></div>
+      <a href="https://happyparentshappybaby.com/midwife-login/" target="_blank">Midwife Login</a>
+    </nav>
   </div>
   <div class="tabs">
     <button class="tab active" onclick="switchTab('lookup')">Venue lookup</button>
