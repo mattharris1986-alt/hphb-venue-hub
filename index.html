@@ -102,6 +102,22 @@ body{font-family:'DM Sans',sans-serif;background:#fdf9f6;color:#1a1a18;min-heigh
 .success-msg{text-align:center;padding:3rem 2rem;}
 .success-msg h3{font-family:'DM Serif Display',serif;font-size:22px;font-weight:400;margin-bottom:8px;}
 .success-msg p{font-size:14px;color:#777;line-height:1.6;}
+.weather-card{background:#fff;border:1px solid #e8ddd4;border-radius:12px;padding:1rem 1.25rem;margin-bottom:1.25rem;}
+.weather-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:0.75rem;}
+.weather-title{font-size:12px;font-weight:500;color:#9a7e6f;letter-spacing:0.04em;text-transform:uppercase;}
+.weather-date{font-size:11px;color:#bbb;}
+.weather-hours{display:flex;gap:6px;overflow-x:auto;padding-bottom:2px;}
+.weather-hours::-webkit-scrollbar{height:4px;}
+.weather-hours::-webkit-scrollbar-track{background:#f5f0ea;}
+.weather-hours::-webkit-scrollbar-thumb{background:#d4b8a8;border-radius:4px;}
+.wh-slot{display:flex;flex-direction:column;align-items:center;gap:4px;min-width:62px;background:#fdf9f6;border:1px solid #ede5dc;border-radius:8px;padding:8px 6px;}
+.wh-time{font-size:11px;color:#9a7e6f;font-weight:500;}
+.wh-icon{font-size:22px;line-height:1;}
+.wh-temp{font-size:13px;font-weight:500;color:#1a1a18;}
+.wh-rain{font-size:10px;color:#7ab0d4;}
+.wh-wind{font-size:10px;color:#aaa;}
+.weather-loading{font-size:13px;color:#bbb;font-style:italic;padding:0.5rem 0;}
+.weather-error{font-size:12px;color:#c07050;padding:0.5rem 0;}
 </style>
 </head>
 <body>
@@ -241,6 +257,8 @@ function selectVenue(key){
   const d=document.getElementById('venue-display');
   if(!key){d.innerHTML='<div class="placeholder">Select a venue above to see everything you need before covering a class.</div>';return;}
   renderVenue(key);
+  const postcode=(venues[key]||{}).postcode||'';
+  loadWeather(postcode);
 }
  
 function renderVenue(key){
@@ -259,6 +277,7 @@ function renderVenue(key){
   }).join('');
   document.getElementById('venue-display').innerHTML=`
     <div id="ai-panel-container"></div>
+    <div id="weather-container"><div class="weather-card"><div class="weather-loading">Loading today's evening weather…</div></div></div>
     <div class="venue-card">
       <div class="venue-title-bar">
         <div><h2>${v.venue_name||key}</h2><div class="addr">${v.address||''}${v.postcode?', '+v.postcode:''}</div></div>
@@ -273,6 +292,70 @@ function renderVenue(key){
 }
  
 function scrollToSec(id){document.getElementById('sec-'+id)?.scrollIntoView({behavior:'smooth',block:'start'});}
+ 
+// ── Weather ──────────────────────────────────────────────────────────────────
+const WMO_ICONS={
+  0:'☀️',1:'🌤️',2:'⛅',3:'☁️',
+  45:'🌫️',48:'🌫️',
+  51:'🌦️',53:'🌦️',55:'🌧️',
+  61:'🌧️',63:'🌧️',65:'🌧️',
+  71:'🌨️',73:'🌨️',75:'❄️',
+  80:'🌦️',81:'🌧️',82:'⛈️',
+  95:'⛈️',96:'⛈️',99:'⛈️',
+};
+function wmoIcon(code){return WMO_ICONS[code]||'🌡️';}
+ 
+async function loadWeather(postcode){
+  const container=document.getElementById('weather-container');
+  if(!container)return;
+  if(!postcode){container.innerHTML='';return;}
+  try{
+    // Geocode postcode via postcodes.io (UK free API)
+    const geo=await fetch(`https://api.postcodes.io/postcodes/${encodeURIComponent(postcode)}`).then(r=>r.json());
+    if(geo.status!==200||!geo.result){container.innerHTML='';return;}
+    const {latitude:lat,longitude:lng}=geo.result;
+ 
+    // Fetch hourly forecast from Open-Meteo (free, no key)
+    const url=`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lng}&hourly=temperature_2m,precipitation_probability,weathercode,windspeed_10m&timezone=Europe%2FLondon&forecast_days=1`;
+    const wx=await fetch(url).then(r=>r.json());
+ 
+    const times=wx.hourly.time;
+    const temps=wx.hourly.temperature_2m;
+    const precip=wx.hourly.precipitation_probability;
+    const codes=wx.hourly.weathercode;
+    const wind=wx.hourly.windspeed_10m;
+ 
+    // Filter 17:00–23:00
+    const slots=[];
+    times.forEach((t,i)=>{
+      const h=parseInt(t.slice(11,13),10);
+      if(h>=17&&h<=23)slots.push({time:`${h}:00`,temp:Math.round(temps[i]),precip:precip[i],code:codes[i],wind:Math.round(wind[i])});
+    });
+ 
+    if(!slots.length){container.innerHTML='';return;}
+ 
+    const today=new Date().toLocaleDateString('en-GB',{weekday:'long',day:'numeric',month:'long'});
+    const slotsHtml=slots.map(s=>`
+      <div class="wh-slot">
+        <div class="wh-time">${s.time}</div>
+        <div class="wh-icon">${wmoIcon(s.code)}</div>
+        <div class="wh-temp">${s.temp}°C</div>
+        <div class="wh-rain">💧 ${s.precip}%</div>
+        <div class="wh-wind">💨 ${s.wind}km/h</div>
+      </div>`).join('');
+ 
+    container.innerHTML=`
+      <div class="weather-card">
+        <div class="weather-header">
+          <span class="weather-title">🌤 Evening weather at venue</span>
+          <span class="weather-date">${today}</span>
+        </div>
+        <div class="weather-hours">${slotsHtml}</div>
+      </div>`;
+  }catch(e){
+    container.innerHTML='';
+  }
+}
  
 function buildSystemPrompt(){
   const v=venues[currentVenueKey]||{};
