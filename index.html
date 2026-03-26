@@ -118,6 +118,28 @@ body{font-family:'DM Sans',sans-serif;background:#fdf9f6;color:#1a1a18;min-heigh
 .wh-wind{font-size:10px;color:#aaa;}
 .weather-loading{font-size:13px;color:#bbb;font-style:italic;padding:0.5rem 0;}
 .weather-error{font-size:12px;color:#c07050;padding:0.5rem 0;}
+.journey-card{background:#fff;border:1px solid #e8ddd4;border-radius:12px;padding:1rem 1.25rem;margin-bottom:1.25rem;}
+.journey-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:0.875rem;}
+.journey-title{font-size:12px;font-weight:500;color:#9a7e6f;letter-spacing:0.04em;text-transform:uppercase;}
+.journey-input-row{display:flex;gap:8px;align-items:center;}
+.journey-input-row input{flex:1;font-family:'DM Sans',sans-serif;font-size:14px;padding:9px 12px;border:1px solid #ddd;border-radius:8px;background:#fff;color:#1a1a18;text-transform:uppercase;}
+.journey-input-row input::placeholder{text-transform:none;color:#bbb;}
+.journey-input-row input:focus{outline:none;border-color:#c4622a;}
+.journey-go-btn{padding:9px 18px;background:#c4622a;color:#fff;border:none;border-radius:8px;cursor:pointer;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:500;white-space:nowrap;}
+.journey-go-btn:hover{background:#a8521f;}
+.journey-go-btn:disabled{opacity:0.45;cursor:not-allowed;}
+.journey-results{margin-top:1rem;display:flex;flex-direction:column;gap:8px;}
+.journey-option{display:flex;align-items:flex-start;gap:12px;background:#fdf9f6;border:1px solid #ede5dc;border-radius:8px;padding:10px 13px;}
+.journey-mode-icon{font-size:22px;flex-shrink:0;margin-top:1px;}
+.journey-mode-body{flex:1;}
+.journey-mode-label{font-size:13px;font-weight:500;color:#1a1a18;margin-bottom:2px;}
+.journey-mode-detail{font-size:12px;color:#777;line-height:1.55;}
+.journey-time-badge{font-size:12px;font-weight:600;color:#c4622a;white-space:nowrap;flex-shrink:0;padding-top:1px;}
+.journey-loading{font-size:13px;color:#bbb;font-style:italic;padding:0.5rem 0;}
+.journey-error{font-size:12px;color:#c07050;margin-top:0.5rem;}
+.journey-links{margin-top:0.75rem;display:flex;gap:8px;flex-wrap:wrap;}
+.journey-link{font-size:11px;color:#c4622a;text-decoration:none;border:1px solid #e8c4a8;border-radius:20px;padding:4px 11px;}
+.journey-link:hover{background:#fdf0ea;}
 </style>
 </head>
 <body>
@@ -259,6 +281,7 @@ function selectVenue(key){
   renderVenue(key);
   const postcode=(venues[key]||{}).postcode||'';
   loadWeather(postcode);
+  renderJourneyPlanner(key);
 }
  
 function renderVenue(key){
@@ -278,6 +301,7 @@ function renderVenue(key){
   document.getElementById('venue-display').innerHTML=`
     <div id="ai-panel-container"></div>
     <div id="weather-container"><div class="weather-card"><div class="weather-loading">Loading today's evening weather…</div></div></div>
+    <div id="journey-container"></div>
     <div class="venue-card">
       <div class="venue-title-bar">
         <div><h2>${v.venue_name||key}</h2><div class="addr">${v.address||''}${v.postcode?', '+v.postcode:''}</div></div>
@@ -355,6 +379,167 @@ async function loadWeather(postcode){
   }catch(e){
     container.innerHTML='';
   }
+}
+ 
+// ── Journey Planner ──────────────────────────────────────────────────────────
+function renderJourneyPlanner(venueKey){
+  const container=document.getElementById('journey-container');
+  if(!container)return;
+  const v=venues[venueKey]||{};
+  const venueName=v.venue_name||venueKey||'the venue';
+  const venuePostcode=v.postcode||v.address||'';
+  container.innerHTML=`
+    <div class="journey-card">
+      <div class="journey-header">
+        <span class="journey-title">🗺 Plan your journey</span>
+      </div>
+      <div class="journey-input-row">
+        <input type="text" id="journey-from" placeholder="Your postcode (e.g. SW1A 1AA)" maxlength="8"
+          onkeydown="if(event.key==='Enter')planJourney()">
+        <button class="journey-go-btn" id="journey-btn" onclick="planJourney()">Get directions</button>
+      </div>
+      <div id="journey-results"></div>
+    </div>`;
+}
+ 
+async function planJourney(){
+  const fromInput=document.getElementById('journey-from');
+  const resultsDiv=document.getElementById('journey-results');
+  const btn=document.getElementById('journey-btn');
+  if(!fromInput||!resultsDiv)return;
+ 
+  const fromPostcode=fromInput.value.trim().toUpperCase();
+  if(!fromPostcode){fromInput.focus();return;}
+ 
+  const v=venues[currentVenueKey]||{};
+  const venueName=v.venue_name||currentVenueKey||'the venue';
+  const venueAddress=`${v.address||''}${v.postcode?', '+v.postcode:''}`.trim();
+  const venuePostcode=v.postcode||'';
+ 
+  // Build Google Maps deep-link URLs
+  const mapsBase='https://www.google.com/maps/dir/';
+  const origin=encodeURIComponent(fromPostcode);
+  const dest=encodeURIComponent(venueAddress||venuePostcode||venueName);
+  const gmDrive=`${mapsBase}?api=1&origin=${origin}&destination=${dest}&travelmode=driving`;
+  const gmTransit=`${mapsBase}?api=1&origin=${origin}&destination=${dest}&travelmode=transit`;
+  const gmWalk=`${mapsBase}?api=1&origin=${origin}&destination=${dest}&travelmode=walking`;
+  const citymapper=`https://citymapper.com/directions?startcoord=&endcoord=&endname=${encodeURIComponent(venueName)}&endaddress=${encodeURIComponent(venueAddress)}`;
+  const trainline=`https://www.thetrainline.com/`;
+  const nationalrail=`https://www.nationalrail.co.uk/`;
+ 
+  resultsDiv.innerHTML=`<div class="journey-loading">Calculating best routes from ${fromPostcode} to ${venueName}…</div>`;
+  btn.disabled=true;
+ 
+  try{
+    // Ask Claude via our proxy — it has web search to look up real journey info
+    const systemPrompt=`You are a practical UK journey planning assistant for teachers who need to cover a class. 
+Given a starting postcode and a destination venue, provide clear journey options.
+You MUST respond with valid JSON only — no markdown, no explanation outside the JSON.
+Return this exact structure:
+{
+  "options": [
+    {
+      "mode": "🚗 Driving",
+      "time": "~45 min",
+      "detail": "Brief practical route note, e.g. M25 to junction 7, then A3. Allow extra time for rush hour.",
+      "tip": "Optional tip, e.g. park on Holland Road for free"
+    },
+    {
+      "mode": "🚆 Train",
+      "time": "~55 min",
+      "detail": "e.g. London Bridge → Brighton (direct, Southern). Then 10 min walk or taxi.",
+      "tip": "Book in advance on Trainline for cheaper fares"
+    },
+    {
+      "mode": "🚌 Bus / Coach",
+      "time": "~1h 20 min",
+      "detail": "Only include if genuinely practical",
+      "tip": ""
+    }
+  ],
+  "summary": "One sentence overall recommendation, e.g. Train is easiest — direct service runs every 30 mins."
+}
+Only include modes that are genuinely practical. Driving and train are almost always relevant. Bus/coach only if useful.
+Use real knowledge and web search to give accurate times and route info.`;
+ 
+    const userMsg=`Journey from: ${fromPostcode}\nDestination: ${venueName}, ${venueAddress}\n\nGive me the best journey options with realistic travel times and practical tips.`;
+ 
+    const res=await fetch('/.netlify/functions/chat',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({
+        model:'claude-sonnet-4-20250514',
+        max_tokens:800,
+        system:systemPrompt,
+        tools:[{type:'web_search_20250305',name:'web_search'}],
+        messages:[{role:'user',content:userMsg}]
+      })
+    });
+ 
+    const data=await res.json();
+    let text='';
+    if(data.content)data.content.forEach(b=>{if(b.type==='text')text+=b.text;});
+ 
+    // Parse JSON from response
+    let parsed=null;
+    try{
+      const clean=text.replace(/```json|```/g,'').trim();
+      parsed=JSON.parse(clean);
+    }catch(e){
+      // fallback if JSON parse fails
+    }
+ 
+    if(parsed&&parsed.options&&parsed.options.length){
+      const optionsHtml=parsed.options.map(o=>`
+        <div class="journey-option">
+          <div class="journey-mode-icon">${o.mode.split(' ')[0]}</div>
+          <div class="journey-mode-body">
+            <div class="journey-mode-label">${o.mode.split(' ').slice(1).join(' ')}</div>
+            <div class="journey-mode-detail">${o.detail}${o.tip?`<br><em>${o.tip}</em>`:''}</div>
+          </div>
+          <div class="journey-time-badge">${o.time}</div>
+        </div>`).join('');
+ 
+      const summaryHtml=parsed.summary?`<div style="font-size:12px;color:#9a7e6f;margin-top:8px;padding:8px 10px;background:#fdf9f6;border-radius:6px;border:1px solid #ede5dc;">💡 ${parsed.summary}</div>`:'';
+ 
+      resultsDiv.innerHTML=`
+        <div class="journey-results">
+          ${optionsHtml}
+          ${summaryHtml}
+          <div class="journey-links">
+            <a href="${gmDrive}" target="_blank" class="journey-link">🚗 Google Maps (driving)</a>
+            <a href="${gmTransit}" target="_blank" class="journey-link">🚆 Google Maps (transit)</a>
+            <a href="${nationalrail}" target="_blank" class="journey-link">🎫 National Rail</a>
+            <a href="${trainline}" target="_blank" class="journey-link">🎫 Trainline</a>
+          </div>
+        </div>`;
+    }else{
+      // Fallback — just show deep links if AI response couldn't be parsed
+      resultsDiv.innerHTML=`
+        <div class="journey-results">
+          <div class="journey-error">Couldn't calculate exact times — use these links to plan your route:</div>
+          <div class="journey-links" style="margin-top:8px">
+            <a href="${gmDrive}" target="_blank" class="journey-link">🚗 Google Maps (driving)</a>
+            <a href="${gmTransit}" target="_blank" class="journey-link">🚆 Google Maps (transit)</a>
+            <a href="${nationalrail}" target="_blank" class="journey-link">🎫 National Rail</a>
+            <a href="${trainline}" target="_blank" class="journey-link">🎫 Trainline</a>
+          </div>
+        </div>`;
+    }
+ 
+  }catch(e){
+    resultsDiv.innerHTML=`
+      <div class="journey-results">
+        <div class="journey-error">Something went wrong. Use these links instead:</div>
+        <div class="journey-links" style="margin-top:8px">
+          <a href="${gmDrive}" target="_blank" class="journey-link">🚗 Google Maps (driving)</a>
+          <a href="${gmTransit}" target="_blank" class="journey-link">🚆 Google Maps (transit)</a>
+          <a href="${nationalrail}" target="_blank" class="journey-link">🎫 National Rail</a>
+        </div>
+      </div>`;
+  }
+ 
+  btn.disabled=false;
 }
  
 function buildSystemPrompt(){
