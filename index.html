@@ -146,7 +146,7 @@ body{font-family:'DM Sans',sans-serif;background:#fdf9f6;color:#1a1a18;min-heigh
 <div class="app">
   <div class="header">
     <img src="https://happyparentshappybaby.com/wp-content/uploads/2024/11/HPHB-Logo-vertical-06.png" alt="Happy Parents Happy Baby" class="header-logo">
-    <p>Cover teacher resource hub</p>
+    <p>Course Host Venue Info</p>
   </div>
   <div class="tabs">
     <button class="tab active" onclick="switchTab('lookup')">Venue lookup</button>
@@ -471,7 +471,6 @@ Use real knowledge and web search to give accurate times and route info.`;
         model:'claude-sonnet-4-20250514',
         max_tokens:800,
         system:systemPrompt,
-        tools:[{type:'web_search_20250305',name:'web_search'}],
         messages:[{role:'user',content:userMsg}]
       })
     });
@@ -608,12 +607,10 @@ async function sendAI(){
     const res=await fetch('/.netlify/functions/chat',{
       method:'POST',
       headers:{'Content-Type':'application/json'},
-      
       body:JSON.stringify({
         model:'claude-sonnet-4-20250514',
         max_tokens:1000,
         system:buildSystemPrompt(),
-        tools:[{type:'web_search_20250305',name:'web_search'}],
         messages:aiHistory,
       })
     });
@@ -707,3 +704,4 @@ init();
 </script>
 </body>
 </html>
+ 
