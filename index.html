@@ -276,44 +276,35 @@ const SECTIONS=[
 
 ];
 
-let venues={
-  'Brighton – Hove Community Centre':{
-    venue_name:'Hove Community Centre',address:'118 Holland Road, Hove',postcode:'BN3 1JF',
-    maps_link:'https://maps.google.com/?q=118+Holland+Road+Hove+BN3+1JF',
-    room_location:'Main hall — through the double doors on the left as you enter. Look for the HPHB sign.',
-    entry_instructions:'Side entrance on Holland Road. Buzz "HPHB" on the intercom. Inner door code: 2847.',
-    reception_contact:'Sarah — 07712 334 221',access_time:'45 mins before class',arrival_time:'Participants arrive ~5 mins early',
-    parking_location:'Free 2hr parking on Holland Road itself. Alternatively Hove station car park (5 min walk, £2/hr).',
-    parking_cost:'£2/hr at Hove station. Street parking free up to 2hrs.',
-    parking_backup:'Waitrose car park on Western Road — 10 min walk, free for 2hrs with purchase.',
-    public_transport:'Hove station: 5 min walk. Bus routes 7, 21, 49 on Western Road (2 min walk).',
-    av_setup:'Large wall-mounted TV (65"). HDMI cable in the equipment cupboard. No Apple adapter onsite — bring your own.',
-    wifi:'HoveCC_Guest / password: community22',
-    tech_issues:'TV occasionally drops HDMI signal — unplug and replug cable.',
-    bring_yourself:'Pelvis model, birth doll, mat x2. Tea & coffee not provided — bring if you want.',
-    group_size:'8–12 couples',course_host:'Jemima Clarke — jemima@hphb.co.uk / 07891 221 334',
-    wish_id_known:'Street parking fills up around 9am on Saturdays. Get there early or use Hove station.',
-  },
-  'London – Islington Arts Factory':{
-    venue_name:'Islington Arts Factory',address:'2 Parkhurst Road, London',postcode:'N7 0SF',
-    room_location:'Studio 3, first floor. Signs from entrance.',
-    entry_instructions:'Main entrance on Parkhurst Road. Reception will let you in — ring ahead if arriving before 9am.',
-    access_time:'30 mins before class',
-    parking_location:'Very limited street parking on Parkhurst Road (pay & display). Strongly recommend the tube.',
-    parking_cost:'£3.50/hr on street. Check congestion charge applicability.',
-    public_transport:'Caledonian Road tube (Piccadilly) — 7 min walk. Holloway Road (Piccadilly) — 10 min walk.',
-    transport_issues:'Piccadilly line can be slow on weekends — allow extra time.',
-    av_setup:'Projector and screen available. Ask reception to set up — they need 20 mins notice.',
-    wifi:'IAF_Events / islington2024',group_size:'6–10 couples',
-    course_host:'Rachel Ng — rachel@hphb.co.uk / 07445 112 009',
-    wish_id_known:'Parking is genuinely terrible here. Tube is the only sensible option. Tell participants the same.',
-    common_problems:'Projector sometimes needs a full restart — ask reception before the class starts.',
-  }
-};
+// ── Google Sheets config ─────────────────────────────────────────────────────
+// Replace this with your Apps Script Web App URL after deploying it
+const SHEET_API_URL = 'https://script.google.com/macros/s/AKfycbzeqHc6mCfe0EoeKh8q542WXaZzF6T_NpiAJuszaruYH_fqLFpcmRE1nDVBK2Snc5aAxw/exec';
 
+let venues={};
 let currentVenueKey=null,editingKey=null,aiHistory=[],aiLoading=false;
 
-function init(){refreshSelect();renderFeedbackForm();}
+async function init(){
+  renderFeedbackForm();
+  await loadVenuesFromSheet();
+}
+
+async function loadVenuesFromSheet(){
+  const sel=document.getElementById('venue-select');
+  sel.innerHTML='<option value="">Loading venues…</option>';
+  try{
+    const res=await fetch(SHEET_API_URL+'?action=getAll');
+    const data=await res.json();
+    if(data.venues){
+      venues=data.venues;
+      refreshSelect();
+    }
+  }catch(e){
+    // Fallback — if sheet not configured yet, show empty state
+    venues={};
+    refreshSelect();
+    console.warn('Could not load from Google Sheets:',e);
+  }
+}
 
 function refreshSelect(){
   const sel=document.getElementById('venue-select');
@@ -705,14 +696,25 @@ function buildModalForm(v){
   document.getElementById('modal-body').innerHTML=h;
 }
 
-function saveVenue(){
+async function saveVenue(){
   const nm=document.getElementById('f__name')?.value.trim();
   if(!nm){alert('Please enter a venue display name.');return;}
+  const btn=document.querySelector('.modal-footer .btn-p');
+  if(btn){btn.textContent='Saving…';btn.disabled=true;}
   if(editingKey&&editingKey!==nm)delete venues[editingKey];
   const d={};
   SECTIONS.forEach(s=>s.fields.forEach(f=>{const el=document.getElementById('f_'+f.key);if(el)d[f.key]=el.value.trim();}));
   venues[nm]=d;
+  // Save to Google Sheets
+  try{
+    await fetch(SHEET_API_URL,{
+      method:'POST',
+      headers:{'Content-Type':'text/plain'},
+      body:JSON.stringify({action:'save',name:nm,oldName:editingKey||nm,data:d})
+    });
+  }catch(e){console.warn('Sheet save failed:',e);}
   refreshSelect();closeModal();
+  if(btn){btn.textContent='Save venue';btn.disabled=false;}
   document.getElementById('venue-select').value=nm;
   selectVenue(nm);
 }
@@ -738,9 +740,11 @@ function renderFeedbackForm(){
   document.getElementById('fb-wrap').innerHTML=h;
 }
 
-function submitFeedback(){
+async function submitFeedback(){
   const nm=document.getElementById('f__name')?.value.trim();
   if(!nm){alert('Please enter a venue display name.');return;}
+  const btn=document.querySelector('#fb-wrap .submit-btn');
+  if(btn){btn.textContent='Saving…';btn.disabled=true;}
   const d={};
   SECTIONS.forEach(s=>s.fields.forEach(f=>{
     const el=document.getElementById('fv_'+f.key);
@@ -748,6 +752,14 @@ function submitFeedback(){
   }));
   venues[nm]=d;
   refreshSelect();
+  // Save to Google Sheets
+  try{
+    await fetch(SHEET_API_URL,{
+      method:'POST',
+      headers:{'Content-Type':'text/plain'},
+      body:JSON.stringify({action:'save',name:nm,oldName:nm,data:d})
+    });
+  }catch(e){console.warn('Sheet save failed:',e);}
   document.getElementById('fb-wrap').innerHTML=`
     <div class="success-msg">
       <h3>Venue saved!</h3>
