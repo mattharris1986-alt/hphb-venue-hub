@@ -1,0 +1,500 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Happy Parent, Happy Baby — Cover Teacher Hub</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'DM Sans',sans-serif;background:#f8f7f4;color:#1a1a18;min-height:100vh;}
+.app{max-width:920px;margin:0 auto;padding:2rem 1.25rem;}
+.header{text-align:center;margin-bottom:2rem;padding-bottom:1.5rem;border-bottom:1px solid #e5e3de;}
+.header h1{font-family:'DM Serif Display',serif;font-size:30px;font-weight:400;color:#1a1a18;margin-bottom:4px;}
+.header p{font-size:13px;color:#888;}
+.tabs{display:flex;gap:4px;margin-bottom:1.5rem;background:#f0ede8;padding:4px;border-radius:12px;}
+.tab{flex:1;padding:9px 12px;border:none;background:transparent;cursor:pointer;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:500;color:#777;border-radius:8px;transition:all 0.15s;}
+.tab.active{background:#fff;color:#1a1a18;border:1px solid #ddd;box-shadow:0 1px 3px rgba(0,0,0,0.06);}
+.venue-select-row{display:flex;gap:8px;align-items:center;margin-bottom:1.25rem;}
+.venue-select-row select{flex:1;font-family:'DM Sans',sans-serif;font-size:15px;padding:10px 12px;border:1px solid #ddd;border-radius:8px;background:#fff;color:#1a1a18;appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23888' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center;}
+.venue-select-row select:focus{outline:none;border-color:#999;}
+.add-btn{padding:9px 16px;background:#fff;border:1px solid #ddd;border-radius:8px;cursor:pointer;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:500;color:#1a1a18;white-space:nowrap;}
+.add-btn:hover{background:#f5f5f3;}
+.placeholder{text-align:center;padding:4rem 2rem;color:#aaa;font-size:14px;}
+.venue-card{background:#fff;border:1px solid #e5e3de;border-radius:12px;overflow:hidden;}
+.venue-title-bar{padding:1rem 1.25rem;border-bottom:1px solid #e5e3de;display:flex;justify-content:space-between;align-items:flex-start;gap:12px;}
+.venue-title-bar h2{font-family:'DM Serif Display',serif;font-size:21px;font-weight:400;color:#1a1a18;}
+.venue-title-bar .addr{font-size:12px;color:#888;margin-top:3px;}
+.vtb-actions{display:flex;gap:6px;flex-shrink:0;}
+.edit-btn{padding:6px 13px;border-radius:8px;cursor:pointer;font-family:'DM Sans',sans-serif;font-size:12px;font-weight:500;background:transparent;border:1px solid #ddd;color:#777;}
+.edit-btn:hover{color:#1a1a18;border-color:#aaa;}
+.ai-btn{padding:6px 13px;border-radius:8px;cursor:pointer;font-family:'DM Sans',sans-serif;font-size:12px;font-weight:500;background:#eef4fb;border:1px solid #bdd4ee;color:#1a5fa8;}
+.ai-btn:hover{background:#deeaf7;}
+.section-nav{display:flex;flex-wrap:wrap;gap:5px;padding:0.75rem 1.25rem;border-bottom:1px solid #e5e3de;background:#faf9f7;}
+.section-pill{padding:4px 10px;border-radius:20px;font-size:11px;font-weight:500;cursor:pointer;background:#fff;border:1px solid #e5e3de;color:#777;}
+.section-pill:hover{color:#1a1a18;border-color:#aaa;}
+.sections-body{padding:1.25rem;display:flex;flex-direction:column;gap:1rem;}
+.info-section{border:1px solid #e5e3de;border-radius:8px;overflow:hidden;}
+.sec-header{padding:9px 13px;background:#faf9f7;border-bottom:1px solid #e5e3de;display:flex;align-items:center;gap:7px;}
+.sec-icon{font-size:13px;}
+.sec-title{font-size:12px;font-weight:500;color:#1a1a18;}
+.sec-body{padding:10px 13px;}
+.field-row{display:flex;gap:10px;padding:6px 0;border-bottom:1px solid #f0ede8;font-size:13px;line-height:1.5;}
+.field-row:last-child{border-bottom:none;padding-bottom:0;}
+.fl{color:#888;min-width:150px;flex-shrink:0;}
+.fv{color:#1a1a18;flex:1;}
+.fv.empty{color:#ccc;font-style:italic;}
+.fv.warn{color:#a06000;}
+.fv a{color:#1a5fa8;}
+.ai-panel{border:1px solid #bdd4ee;border-radius:12px;overflow:hidden;margin-bottom:1.25rem;background:#fff;}
+.ai-panel-header{padding:0.75rem 1rem;background:#eef4fb;border-bottom:1px solid #bdd4ee;display:flex;align-items:center;justify-content:space-between;}
+.ai-panel-title{font-size:13px;font-weight:500;color:#1a5fa8;}
+.ai-panel-sub{font-size:11px;color:#5580aa;margin-top:1px;}
+.ai-close-btn{background:none;border:none;cursor:pointer;font-size:18px;color:#5580aa;line-height:1;}
+.ai-close-btn:hover{color:#1a5fa8;}
+.ai-messages{padding:1rem;display:flex;flex-direction:column;gap:10px;max-height:360px;overflow-y:auto;}
+.ai-msg{display:flex;flex-direction:column;gap:2px;}
+.ai-bubble{padding:10px 13px;border-radius:8px;font-size:13px;line-height:1.6;}
+.ai-bubble.user{background:#f0ede8;color:#1a1a18;align-self:flex-end;max-width:85%;}
+.ai-bubble.assistant{background:#fff;border:1px solid #e5e3de;color:#1a1a18;max-width:95%;}
+.ai-bubble.thinking{color:#aaa;font-style:italic;border:1px solid #f0ede8;background:#faf9f7;}
+.quick-qs{display:flex;flex-wrap:wrap;gap:6px;padding:0 1rem 0.875rem;}
+.quick-q{padding:5px 11px;border:1px solid #bdd4ee;border-radius:20px;font-size:11px;color:#1a5fa8;cursor:pointer;background:transparent;}
+.quick-q:hover{background:#eef4fb;}
+.ai-input-row{display:flex;gap:8px;padding:0.75rem;border-top:1px solid #bdd4ee;background:#faf9f7;}
+.ai-input-row input{flex:1;font-family:'DM Sans',sans-serif;font-size:13px;padding:9px 12px;border:1px solid #ddd;border-radius:8px;background:#fff;color:#1a1a18;}
+.ai-input-row input:focus{outline:none;border-color:#aaa;}
+.ai-send-btn{padding:0 18px;background:#1a5fa8;color:#fff;border:none;border-radius:8px;cursor:pointer;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:500;white-space:nowrap;}
+.ai-send-btn:hover{background:#155090;}
+.ai-send-btn:disabled{opacity:0.4;cursor:not-allowed;}
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.45);display:flex;align-items:flex-start;justify-content:center;padding:2rem 1rem;z-index:100;overflow-y:auto;}
+.modal{background:#fff;border-radius:12px;border:1px solid #e5e3de;width:100%;max-width:620px;}
+.modal-header{padding:1rem 1.25rem;border-bottom:1px solid #e5e3de;display:flex;justify-content:space-between;align-items:center;}
+.modal-header h3{font-family:'DM Serif Display',serif;font-size:18px;font-weight:400;}
+.modal-close{background:none;border:none;font-size:22px;cursor:pointer;color:#aaa;line-height:1;}
+.modal-close:hover{color:#1a1a18;}
+.modal-body{padding:1.25rem;max-height:65vh;overflow-y:auto;display:flex;flex-direction:column;gap:0.875rem;}
+.msec{font-size:11px;font-weight:500;color:#aaa;letter-spacing:0.05em;text-transform:uppercase;padding-bottom:4px;border-bottom:1px solid #e5e3de;margin-top:4px;}
+.fg{display:flex;flex-direction:column;gap:4px;}
+.fg label{font-size:12px;color:#777;}
+.fg input,.fg textarea,.fg select{font-family:'DM Sans',sans-serif;font-size:13px;width:100%;padding:8px 10px;border:1px solid #ddd;border-radius:6px;color:#1a1a18;background:#fff;}
+.fg input:focus,.fg textarea:focus,.fg select:focus{outline:none;border-color:#aaa;}
+.fg textarea{resize:vertical;min-height:60px;}
+.modal-footer{padding:0.875rem 1.25rem;border-top:1px solid #e5e3de;display:flex;gap:8px;justify-content:flex-end;}
+.btn-p{padding:8px 20px;background:#1a1a18;color:#fff;border:none;border-radius:8px;cursor:pointer;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:500;}
+.btn-p:hover{background:#333;}
+.btn-s{padding:8px 20px;background:transparent;color:#1a1a18;border:1px solid #ddd;border-radius:8px;cursor:pointer;font-family:'DM Sans',sans-serif;font-size:13px;}
+.btn-s:hover{background:#f5f5f3;}
+.form-intro{font-size:14px;color:#777;margin-bottom:1.5rem;line-height:1.65;}
+.form-sec{display:flex;flex-direction:column;gap:0.875rem;}
+.form-sec-title{font-size:11px;font-weight:500;letter-spacing:0.06em;color:#aaa;text-transform:uppercase;padding-bottom:5px;border-bottom:1px solid #e5e3de;}
+.form-grp{display:flex;flex-direction:column;gap:5px;}
+.form-grp label{font-size:13px;font-weight:500;color:#1a1a18;}
+.form-grp input,.form-grp textarea,.form-grp select{font-family:'DM Sans',sans-serif;font-size:13px;width:100%;padding:9px 11px;border:1px solid #ddd;border-radius:8px;color:#1a1a18;background:#fff;}
+.form-grp input:focus,.form-grp textarea:focus,.form-grp select:focus{outline:none;border-color:#aaa;}
+.form-grp textarea{resize:vertical;min-height:80px;}
+.submit-btn{width:100%;padding:12px;background:#1a1a18;color:#fff;border:none;border-radius:8px;cursor:pointer;font-family:'DM Sans',sans-serif;font-size:14px;font-weight:500;margin-top:0.5rem;}
+.submit-btn:hover{background:#333;}
+.radio-group{display:flex;gap:7px;flex-wrap:wrap;}
+.radio-opt{padding:6px 13px;border:1px solid #ddd;border-radius:20px;cursor:pointer;font-size:12px;color:#777;user-select:none;}
+.radio-opt.sel{border-color:#aaa;color:#1a1a18;background:#f5f5f3;}
+.success-msg{text-align:center;padding:3rem 2rem;}
+.success-msg h3{font-family:'DM Serif Display',serif;font-size:22px;font-weight:400;margin-bottom:8px;}
+.success-msg p{font-size:14px;color:#777;line-height:1.6;}
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="header">
+    <h1>Happy Parent, Happy Baby</h1>
+    <p>Cover teacher resource hub</p>
+  </div>
+  <div class="tabs">
+    <button class="tab active" onclick="switchTab('lookup')">Venue lookup</button>
+    <button class="tab" onclick="switchTab('feedback')">Post-cover feedback</button>
+  </div>
+  <div id="tab-lookup">
+    <div class="venue-select-row">
+      <select id="venue-select" onchange="selectVenue(this.value)"></select>
+      <button class="add-btn" onclick="openAdd()">+ Add venue</button>
+    </div>
+    <div id="venue-display"><div class="placeholder">Select a venue above to see everything you need before covering a class.</div></div>
+  </div>
+  <div id="tab-feedback" style="display:none;"><div id="fb-wrap"></div></div>
+  <div id="modal-overlay" class="modal-overlay" style="display:none;" onclick="closeModalOut(event)">
+    <div class="modal">
+      <div class="modal-header"><h3 id="modal-title">Add venue</h3><button class="modal-close" onclick="closeModal()">×</button></div>
+      <div class="modal-body" id="modal-body"></div>
+      <div class="modal-footer"><button class="btn-s" onclick="closeModal()">Cancel</button><button class="btn-p" onclick="saveVenue()">Save venue</button></div>
+    </div>
+  </div>
+</div>
+
+<script>
+const SECTIONS=[
+  {id:'venue_access',icon:'🏠',title:'Venue & access',fields:[
+    {key:'venue_name',label:'Venue name',type:'input'},{key:'address',label:'Full address',type:'input'},
+    {key:'postcode',label:'Postcode',type:'input'},{key:'maps_link',label:'Google Maps link',type:'input'},
+    {key:'room_location',label:'Room location',type:'textarea'},{key:'entry_instructions',label:'Entry instructions',type:'textarea'},
+    {key:'reception_contact',label:'Reception contact',type:'input'},{key:'access_time',label:'Access time',type:'input'},
+    {key:'arrival_time',label:'Participant arrival time',type:'input'},
+  ]},
+  {id:'parking',icon:'🚗',title:'Parking & transport',fields:[
+    {key:'parking_location',label:'Parking location',type:'textarea'},{key:'parking_cost',label:'Cost & restrictions',type:'input'},
+    {key:'parking_backup',label:'Backup parking',type:'textarea'},{key:'public_transport',label:'Nearest public transport',type:'textarea'},
+    {key:'transport_issues',label:'Common issues',type:'textarea'},
+  ]},
+  {id:'room_setup',icon:'🪑',title:'Room setup',fields:[
+    {key:'setup_type',label:'Pre-set or self-setup?',type:'input'},{key:'layout',label:'Layout style',type:'input'},
+    {key:'equipment_storage',label:'Equipment storage',type:'textarea'},{key:'setup_time',label:'Setup/reset time needed',type:'input'},
+  ]},
+  {id:'it',icon:'💻',title:'IT & equipment',fields:[
+    {key:'av_setup',label:'Projector / screen / TV',type:'input'},{key:'wifi',label:'WiFi details',type:'input'},
+    {key:'tech_issues',label:'Known issues',type:'textarea'},{key:'extension_leads',label:'Extension leads needed?',type:'input'},
+    {key:'tech_backup',label:'Backup plan if tech fails',type:'textarea'},
+  ]},
+  {id:'kit',icon:'🎒',title:'Teaching kit',fields:[
+    {key:'provided_onsite',label:'Provided onsite',type:'textarea'},{key:'bring_yourself',label:'What to bring',type:'textarea'},
+    {key:'practical_space',label:'Space for practicals',type:'input'},
+  ]},
+  {id:'facilities',icon:'🚻',title:'Facilities',fields:[
+    {key:'toilets',label:'Toilets & accessibility',type:'textarea'},{key:'kitchen',label:'Kitchen / water access',type:'input'},
+    {key:'food_policy',label:'Food & drink policy',type:'input'},{key:'break_info',label:'Break arrangements',type:'input'},
+  ]},
+  {id:'group',icon:'👶',title:'Group details',fields:[
+    {key:'group_size',label:'Typical group size',type:'input'},{key:'group_mix',label:'First-time vs multiparous',type:'input'},
+    {key:'group_dynamics',label:'Group dynamics',type:'textarea'},{key:'birth_partners',label:'Birth partner attendance',type:'input'},
+    {key:'common_questions',label:'Common questions',type:'textarea'},
+  ]},
+  {id:'session',icon:'⏱',title:'Session structure',fields:[
+    {key:'session_length',label:'Session length',type:'input'},{key:'running_order',label:'Typical running order',type:'textarea'},
+    {key:'non_negotiable',label:'Non-negotiable content',type:'textarea'},{key:'flexible_sections',label:'Flexible sections',type:'textarea'},
+    {key:'timing_challenges',label:'Timing challenges',type:'textarea'},
+  ]},
+  {id:'maternity',icon:'🏥',title:'Local maternity services',fields:[
+    {key:'nearest_hospitals',label:'Nearest hospitals / birth units',type:'textarea'},{key:'home_birth',label:'Home birth availability',type:'input'},
+    {key:'key_policies',label:'Key policies',type:'textarea'},{key:'transfer_times',label:'Transfer times',type:'input'},
+  ]},
+  {id:'feeding',icon:'🤱',title:'Infant feeding support',fields:[
+    {key:'bf_clinics',label:'Breastfeeding clinics & groups',type:'textarea'},{key:'feeding_contacts',label:'Infant feeding contacts',type:'textarea'},
+    {key:'notable_feeding',label:'Notable services',type:'textarea'},
+  ]},
+  {id:'postnatal',icon:'💛',title:'Postnatal support',fields:[
+    {key:'health_visiting',label:'Health visiting services',type:'textarea'},{key:'childrens_centres',label:"Children's centres",type:'textarea'},
+    {key:'postnatal_groups',label:'Postnatal groups',type:'textarea'},{key:'mental_health',label:'Mental health support',type:'textarea'},
+    {key:'urgent_contacts',label:'Urgent contacts',type:'textarea'},
+  ]},
+  {id:'contacts',icon:'📞',title:'Key contacts',fields:[
+    {key:'course_host',label:'Course host contact',type:'input'},{key:'venue_contact',label:'Venue contact',type:'input'},
+    {key:'it_support',label:'IT support',type:'input'},{key:'emergency_access',label:'Emergency access contact',type:'input'},
+  ]},
+  {id:'troubleshooting',icon:'🔧',title:'Troubleshooting & tips',fields:[
+    {key:'common_problems',label:'Common problems & solutions',type:'textarea'},{key:'past_issues',label:'Past issues',type:'textarea'},
+    {key:'wish_id_known',label:"What I wish I'd known",type:'textarea',warn:true},
+  ]},
+  {id:'extras',icon:'✨',title:'Extra touches',fields:[
+    {key:'signage',label:'Signage placement',type:'textarea'},{key:'greeting',label:'Greeting routine',type:'textarea'},
+    {key:'local_recs',label:'Local recommendations',type:'textarea'},
+  ]},
+];
+
+let venues={
+  'Brighton – Hove Community Centre':{
+    venue_name:'Hove Community Centre',address:'118 Holland Road, Hove',postcode:'BN3 1JF',
+    maps_link:'https://maps.google.com/?q=118+Holland+Road+Hove+BN3+1JF',
+    room_location:'Main hall — through the double doors on the left as you enter. Look for the HPHB sign.',
+    entry_instructions:'Side entrance on Holland Road. Buzz "HPHB" on the intercom. Inner door code: 2847.',
+    reception_contact:'Sarah — 07712 334 221',access_time:'45 mins before class',arrival_time:'Participants arrive ~5 mins early',
+    parking_location:'Free 2hr parking on Holland Road itself. Alternatively Hove station car park (5 min walk, £2/hr).',
+    parking_cost:'£2/hr at Hove station. Street parking free up to 2hrs.',
+    parking_backup:'Waitrose car park on Western Road — 10 min walk, free for 2hrs with purchase.',
+    public_transport:'Hove station: 5 min walk. Bus routes 7, 21, 49 on Western Road (2 min walk).',
+    av_setup:'Large wall-mounted TV (65"). HDMI cable in the equipment cupboard. No Apple adapter onsite — bring your own.',
+    wifi:'HoveCC_Guest / password: community22',
+    tech_issues:'TV occasionally drops HDMI signal — unplug and replug cable.',
+    bring_yourself:'Pelvis model, birth doll, mat x2. Tea & coffee not provided — bring if you want.',
+    group_size:'8–12 couples',course_host:'Jemima Clarke — jemima@hphb.co.uk / 07891 221 334',
+    wish_id_known:'Street parking fills up around 9am on Saturdays. Get there early or use Hove station.',
+  },
+  'London – Islington Arts Factory':{
+    venue_name:'Islington Arts Factory',address:'2 Parkhurst Road, London',postcode:'N7 0SF',
+    room_location:'Studio 3, first floor. Signs from entrance.',
+    entry_instructions:'Main entrance on Parkhurst Road. Reception will let you in — ring ahead if arriving before 9am.',
+    access_time:'30 mins before class',
+    parking_location:'Very limited street parking on Parkhurst Road (pay & display). Strongly recommend the tube.',
+    parking_cost:'£3.50/hr on street. Check congestion charge applicability.',
+    public_transport:'Caledonian Road tube (Piccadilly) — 7 min walk. Holloway Road (Piccadilly) — 10 min walk.',
+    transport_issues:'Piccadilly line can be slow on weekends — allow extra time.',
+    av_setup:'Projector and screen available. Ask reception to set up — they need 20 mins notice.',
+    wifi:'IAF_Events / islington2024',group_size:'6–10 couples',
+    course_host:'Rachel Ng — rachel@hphb.co.uk / 07445 112 009',
+    wish_id_known:'Parking is genuinely terrible here. Tube is the only sensible option. Tell participants the same.',
+    common_problems:'Projector sometimes needs a full restart — ask reception before the class starts.',
+  }
+};
+
+let currentVenueKey=null,editingKey=null,aiHistory=[],aiLoading=false;
+
+function init(){refreshSelect();renderFeedbackForm();}
+
+function refreshSelect(){
+  const sel=document.getElementById('venue-select');
+  const cur=sel.value;
+  sel.innerHTML='<option value="">— Select a venue —</option>';
+  Object.keys(venues).sort().forEach(k=>{
+    const o=document.createElement('option');
+    o.value=k;o.textContent=k;sel.appendChild(o);
+  });
+  if(cur&&venues[cur])sel.value=cur;
+}
+
+function switchTab(t){
+  document.querySelectorAll('.tab').forEach((el,i)=>el.classList.toggle('active',(i===0&&t==='lookup')||(i===1&&t==='feedback')));
+  document.getElementById('tab-lookup').style.display=t==='lookup'?'':'none';
+  document.getElementById('tab-feedback').style.display=t==='feedback'?'':'none';
+}
+
+function selectVenue(key){
+  currentVenueKey=key;aiHistory=[];
+  const d=document.getElementById('venue-display');
+  if(!key){d.innerHTML='<div class="placeholder">Select a venue above to see everything you need before covering a class.</div>';return;}
+  renderVenue(key);
+}
+
+function renderVenue(key){
+  const v=venues[key]||{};
+  const pillsHtml=SECTIONS.map(s=>`<span class="section-pill" onclick="scrollToSec('${s.id}')">${s.icon} ${s.title}</span>`).join('');
+  const secsHtml=SECTIONS.map(s=>{
+    const fh=s.fields.map(f=>{
+      const val=v[f.key];const empty=!val||val.trim()==='';
+      const vh=empty?`<span class="fv empty">Not yet added</span>`:
+        f.key==='maps_link'?`<span class="fv"><a href="${val}" target="_blank">Open in maps ↗</a></span>`:
+        f.warn?`<span class="fv warn">${val.replace(/\n/g,'<br>')}</span>`:
+        `<span class="fv">${val.replace(/\n/g,'<br>')}</span>`;
+      return`<div class="field-row"><span class="fl">${f.label}</span>${vh}</div>`;
+    }).join('');
+    return`<div class="info-section" id="sec-${s.id}"><div class="sec-header"><span class="sec-icon">${s.icon}</span><span class="sec-title">${s.title}</span></div><div class="sec-body">${fh}</div></div>`;
+  }).join('');
+  document.getElementById('venue-display').innerHTML=`
+    <div id="ai-panel-container"></div>
+    <div class="venue-card">
+      <div class="venue-title-bar">
+        <div><h2>${v.venue_name||key}</h2><div class="addr">${v.address||''}${v.postcode?', '+v.postcode:''}</div></div>
+        <div class="vtb-actions">
+          <button class="ai-btn" onclick="openAIPanel()">Ask AI about this venue</button>
+          <button class="edit-btn" onclick="openEdit('${key.replace(/'/g,"\\'")}')">Edit</button>
+        </div>
+      </div>
+      <div class="section-nav">${pillsHtml}</div>
+      <div class="sections-body">${secsHtml}</div>
+    </div>`;
+}
+
+function scrollToSec(id){document.getElementById('sec-'+id)?.scrollIntoView({behavior:'smooth',block:'start'});}
+
+function buildSystemPrompt(){
+  const v=venues[currentVenueKey]||{};
+  const known=[];
+  SECTIONS.forEach(s=>s.fields.forEach(f=>{if(v[f.key]&&v[f.key].trim())known.push(`${f.label}: ${v[f.key]}`);}));
+  return`You are a practical assistant for Happy Parent, Happy Baby cover teachers. The user is preparing to teach a class at the following venue.
+
+VENUE DETAILS:
+${known.join('\n')}
+
+Your role:
+- Answer questions about getting there, local amenities, parking, transport, nearby services, hospitals, feeding support, etc.
+- Use the venue details as context. For real-world questions (nearest toilet, coffee shop, car park hours) use your knowledge AND web search to give specific, useful answers grounded in the exact postcode and neighbourhood.
+- Always be specific and practical. Include approximate walking distances where possible.
+- Keep answers concise — this person is preparing to cover a class and needs quick, actionable info.`;
+}
+
+function openAIPanel(){
+  const c=document.getElementById('ai-panel-container');
+  if(c.querySelector('.ai-panel')){c.innerHTML='';return;}
+  aiHistory=[];
+  const v=venues[currentVenueKey]||{};
+  c.innerHTML=`
+    <div class="ai-panel">
+      <div class="ai-panel-header">
+        <div>
+          <div class="ai-panel-title">AI venue assistant</div>
+          <div class="ai-panel-sub">Context loaded: ${v.venue_name||currentVenueKey}${v.postcode?' ('+v.postcode+')':''}</div>
+        </div>
+        <button class="ai-close-btn" onclick="document.getElementById('ai-panel-container').innerHTML=''">×</button>
+      </div>
+      <div class="ai-messages" id="ai-msgs">
+        <div class="ai-msg"><div class="ai-bubble assistant">Hi! I have the full details for <strong>${v.venue_name||currentVenueKey}</strong>. Ask me anything — nearest parking, public toilets, coffee before class, local services, hospitals, anything.</div></div>
+      </div>
+      <div class="quick-qs">
+        <span class="quick-q" onclick="sendQuick('Where is the nearest public toilet?')">Nearest public toilet</span>
+        <span class="quick-q" onclick="sendQuick('Where can I get a coffee nearby before class?')">Coffee nearby</span>
+        <span class="quick-q" onclick="sendQuick('What are my best parking options and how much will it cost?')">Parking & cost</span>
+        <span class="quick-q" onclick="sendQuick('How do I get here by public transport from central London?')">Public transport</span>
+        <span class="quick-q" onclick="sendQuick('What should I bring and not forget?')">What to bring</span>
+        <span class="quick-q" onclick="sendQuick('What are the nearest maternity services and hospitals?')">Nearby hospitals</span>
+      </div>
+      <div class="ai-input-row">
+        <input type="text" id="ai-input" placeholder="Ask anything about this venue…" onkeydown="if(event.key==='Enter')sendAI()">
+        <button class="ai-send-btn" id="ai-send-btn" onclick="sendAI()">Ask</button>
+      </div>
+    </div>`;
+}
+
+function sendQuick(q){document.getElementById('ai-input').value=q;sendAI();}
+
+async function sendAI(){
+  const input=document.getElementById('ai-input');
+  const q=input.value.trim();
+  if(!q||aiLoading)return;
+  input.value='';aiLoading=true;
+  document.getElementById('ai-send-btn').disabled=true;
+  const msgs=document.getElementById('ai-msgs');
+  msgs.innerHTML+=`<div class="ai-msg"><div class="ai-bubble user">${q}</div></div>`;
+  const tid='t'+Date.now();
+  msgs.innerHTML+=`<div class="ai-msg" id="${tid}"><div class="ai-bubble thinking">Searching for local info…</div></div>`;
+  msgs.scrollTop=msgs.scrollHeight;
+  aiHistory.push({role:'user',content:q});
+  try{
+    const res=await fetch('/.netlify/functions/chat',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      
+      body:JSON.stringify({
+        model:'claude-sonnet-4-20250514',
+        max_tokens:1000,
+        system:buildSystemPrompt(),
+        tools:[{type:'web_search_20250305',name:'web_search'}],
+        messages:aiHistory,
+      })
+    });
+    const data=await res.json();
+    document.getElementById(tid)?.remove();
+    let reply='';
+    if(data.content)data.content.forEach(b=>{if(b.type==='text')reply+=b.text;});
+    if(!reply)reply="Sorry, I couldn't find a good answer for that. Try rephrasing or check the venue details directly.";
+    aiHistory.push({role:'assistant',content:reply});
+    msgs.innerHTML+=`<div class="ai-msg"><div class="ai-bubble assistant">${reply.replace(/\n/g,'<br>').replace(/\*\*(.*?)\*\*/g,'<strong>$1</strong>')}</div></div>`;
+    msgs.scrollTop=msgs.scrollHeight;
+  }catch(e){
+    document.getElementById(tid)?.remove();
+    msgs.innerHTML+=`<div class="ai-msg"><div class="ai-bubble thinking">Something went wrong — please try again.</div></div>`;
+  }
+  aiLoading=false;
+  document.getElementById('ai-send-btn').disabled=false;
+}
+
+function openAdd(){editingKey=null;document.getElementById('modal-title').textContent='Add new venue';buildModalForm({});document.getElementById('modal-overlay').style.display='flex';}
+function openEdit(key){editingKey=key;document.getElementById('modal-title').textContent='Edit: '+key;buildModalForm(venues[key]||{});document.getElementById('modal-overlay').style.display='flex';}
+
+function buildModalForm(v){
+  let h=`<div class="fg"><label>Venue display name (shown in dropdown)</label><input id="f__name" type="text" value="${editingKey||''}" placeholder="e.g. Brighton – Hove Community Centre"></div>`;
+  SECTIONS.forEach(s=>{
+    h+=`<div class="msec">${s.icon} ${s.title}</div>`;
+    s.fields.forEach(f=>{
+      const val=(v[f.key]||'').replace(/"/g,'&quot;');
+      h+=`<div class="fg"><label>${f.label}</label>`;
+      h+=f.type==='textarea'?`<textarea id="f_${f.key}">${v[f.key]||''}</textarea>`:`<input id="f_${f.key}" type="text" value="${val}">`;
+      h+=`</div>`;
+    });
+  });
+  document.getElementById('modal-body').innerHTML=h;
+}
+
+function saveVenue(){
+  const nm=document.getElementById('f__name')?.value.trim();
+  if(!nm){alert('Please enter a venue display name.');return;}
+  if(editingKey&&editingKey!==nm)delete venues[editingKey];
+  const d={};
+  SECTIONS.forEach(s=>s.fields.forEach(f=>{const el=document.getElementById('f_'+f.key);if(el)d[f.key]=el.value.trim();}));
+  venues[nm]=d;
+  refreshSelect();closeModal();
+  document.getElementById('venue-select').value=nm;
+  selectVenue(nm);
+}
+
+function closeModal(){document.getElementById('modal-overlay').style.display='none';}
+function closeModalOut(e){if(e.target.id==='modal-overlay')closeModal();}
+
+function renderFeedbackForm(){
+  const secs=[
+    {title:'About the cover',fields:[
+      {id:'fb_venue',label:'Which venue did you cover?',type:'sel-venue'},
+      {id:'fb_date',label:'Date of class',type:'date'},
+      {id:'fb_name',label:'Your name',type:'text'},
+    ]},
+    {title:'Getting there',fields:[
+      {id:'fb_parking',label:'How was the parking? Any surprises?',type:'textarea'},
+      {id:'fb_transport',label:'Any transport tips for next time?',type:'textarea'},
+    ]},
+    {title:'The venue',fields:[
+      {id:'fb_access',label:'Any issues with entry or access?',type:'textarea'},
+      {id:'fb_room',label:'Room setup — anything to flag?',type:'textarea'},
+      {id:'fb_facilities',label:'Facilities — anything useful to note?',type:'textarea'},
+    ]},
+    {title:'Tech & equipment',fields:[
+      {id:'fb_tech',label:'Did the tech work as expected?',type:'radio',opts:['Yes, all fine','Minor issues','Major issues','N/A']},
+      {id:'fb_tech_notes',label:'Any tech notes for next time?',type:'textarea'},
+    ]},
+    {title:'The class',fields:[
+      {id:'fb_group',label:'Group size and dynamics — anything to note?',type:'textarea'},
+      {id:'fb_timing',label:'How did timing go?',type:'radio',opts:['Ran perfectly','Slightly over','Slightly under','Very off']},
+      {id:'fb_timing_notes',label:'Any timing notes?',type:'textarea'},
+    ]},
+    {title:'Tips for the next person',fields:[
+      {id:'fb_wish',label:"What do you wish you'd known before you went?",type:'textarea'},
+      {id:'fb_general',label:'Anything else useful for the venue info sheet?',type:'textarea'},
+    ]},
+  ];
+  let h=`<p class="form-intro">Covered a class? Fill this in so the next teacher has everything they need. Takes about 3 minutes.</p>`;
+  secs.forEach(sec=>{
+    h+=`<div class="form-sec"><div class="form-sec-title">${sec.title}</div>`;
+    sec.fields.forEach(f=>{
+      h+=`<div class="form-grp"><label>${f.label}</label>`;
+      if(f.type==='text')h+=`<input type="text" id="${f.id}">`;
+      else if(f.type==='date')h+=`<input type="date" id="${f.id}">`;
+      else if(f.type==='textarea')h+=`<textarea id="${f.id}"></textarea>`;
+      else if(f.type==='sel-venue'){
+        h+=`<select id="${f.id}"><option value="">— Select venue —</option>`;
+        Object.keys(venues).sort().forEach(k=>{h+=`<option value="${k}">${k}</option>`;});
+        h+=`</select>`;
+      }else if(f.type==='radio'){
+        h+=`<div class="radio-group" id="${f.id}_g">`;
+        f.opts.forEach(o=>h+=`<span class="radio-opt" onclick="pickRadio('${f.id}',this)">${o}</span>`);
+        h+=`</div>`;
+      }
+      h+=`</div>`;
+    });
+    h+=`</div>`;
+  });
+  h+=`<button class="submit-btn" onclick="submitFeedback()">Submit feedback</button>`;
+  document.getElementById('fb-wrap').innerHTML=h;
+}
+
+function pickRadio(id,el){document.querySelectorAll(`#${id}_g .radio-opt`).forEach(e=>e.classList.remove('sel'));el.classList.add('sel');}
+
+function submitFeedback(){
+  const venue=document.getElementById('fb_venue')?.value;
+  const name=document.getElementById('fb_name')?.value?.trim();
+  if(!venue||!name){alert('Please select a venue and enter your name.');return;}
+  const wish=document.getElementById('fb_wish')?.value?.trim();
+  const parking=document.getElementById('fb_parking')?.value?.trim();
+  const date=document.getElementById('fb_date')?.value||'recent';
+  if(wish&&venues[venue]){
+    const ex=venues[venue].wish_id_known||'';
+    venues[venue].wish_id_known=ex?ex+'\n\n['+date+'] '+wish:wish;
+  }
+  if(parking&&venues[venue]&&!venues[venue].parking_location)venues[venue].parking_location=parking;
+  document.getElementById('fb-wrap').innerHTML=`
+    <div class="success-msg">
+      <h3>Thanks, ${name}!</h3>
+      <p>Your notes for <strong>${venue}</strong> have been saved.<br>The next cover teacher will really appreciate it.</p>
+      <br><br>
+      <button class="btn-s" onclick="renderFeedbackForm();switchTab('lookup');document.getElementById('venue-select').value='${venue}';selectVenue('${venue}')">View updated venue sheet</button>
+    </div>`;
+}
+
+init();
+</script>
+</body>
+</html>
