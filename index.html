@@ -257,7 +257,7 @@ body{font-family:'Sora',sans-serif;font-weight:300;background:#fdf9f6;color:#1a1
       <div class="venue-dropdown" id="venue-dropdown"></div>
     </div>
     <div id="venue-selected-tag-container"></div>
-    <div id="venue-display"><div class="placeholder">Select a venue above to see everything you need before covering a class.<br><br><span style="font-size:14px;color:#c4622a;font-style:italic;font-weight:500;">Because 'I'll just wing it' is not a birth plan.</span></div></div>
+    <div id="venue-display"><div class="placeholder">Select a venue above to see everything you need before covering a class.</div></div>
   </div>
   <div id="tab-feedback" style="display:none;"><div id="fb-wrap"></div></div>
   <div id="modal-overlay" class="modal-overlay" style="display:none;" onclick="closeModalOut(event)">
@@ -468,7 +468,7 @@ function switchTab(t){
 function selectVenue(key){
   currentVenueKey=key;aiHistory=[];
   const d=document.getElementById('venue-display');
-  if(!key){d.innerHTML='<div class="placeholder">Select a venue above to see everything you need before covering a class.<br><br><span style="font-size:14px;color:#c4622a;font-style:italic;font-weight:500;">Because \'I\'ll just wing it\' is not a birth plan.</span></div>';return;}
+  if(!key){d.innerHTML='<div class="placeholder">Select a venue above to see everything you need before covering a class.</div>';return;}
   renderVenue(key);
   const postcode=(venues[key]||{}).postcode||'';
   loadWeather(postcode);
@@ -521,6 +521,46 @@ const WMO_ICONS={
 };
 function wmoIcon(code){return WMO_ICONS[code]||'🌡️';}
 
+function weatherQuip(slots){
+  // Use the 18:00 or 19:00 slot as representative, or first available
+  const rep=slots.find(s=>s.time==='18:00'||s.time==='19:00')||slots[0];
+  const avgTemp=Math.round(slots.reduce((a,s)=>a+s.temp,0)/slots.length);
+  const maxPrecip=Math.max(...slots.map(s=>s.precip));
+  const maxWind=Math.max(...slots.map(s=>s.wind));
+  const code=rep.code;
+
+  // Snow
+  if([71,73,75].includes(code)) return "❄️ It's snowing. Actual snow. In England. Tell everyone.";
+  // Thunderstorm
+  if([95,96,99].includes(code)) return "⛈️ Thunderstorms forecast. The universe is testing you — go anyway.";
+  // Heavy rain
+  if([65,82].includes(code)||maxPrecip>=80) return "☔ Heavy rain incoming. Pack an umbrella, a spare umbrella, and the will to carry on.";
+  // Moderate rain
+  if([61,63,81].includes(code)||maxPrecip>=50) return "🌧️ It's going to rain. Classic. At least you're not surprised.";
+  // Light drizzle
+  if([51,53,55,80].includes(code)||maxPrecip>=30) return "🌦️ A bit drizzly. The British weather starter pack — just pretend it's refreshing.";
+  // Foggy
+  if([45,48].includes(code)) return "🌫️ Foggy out there. Add 15 mins to your journey and channel your inner ghost.";
+  // Overcast
+  if(code===3||(avgTemp<8&&maxPrecip<20)) return "☁️ Grey and overcast. A classic British evening — at least it's not raining. Yet.";
+  // Partly cloudy, mild
+  if([1,2].includes(code)&&avgTemp>=12) return "⛅ Not bad at all! Optimistically mild. Don't jinx it.";
+  // Warm and sunny
+  if(code===0&&avgTemp>=20) return "☀️ Gorgeous evening — shorts weather! Did someone order a British summer?";
+  // Sunny but cold
+  if(code===0&&avgTemp<10) return "☀️ Bright and sunny but absolutely freezing. The sun is lying to you.";
+  // Sunny and pleasant
+  if(code===0) return "🌞 Lovely evening for it. The weather gods have clocked in for once.";
+  // Windy
+  if(maxWind>=50) return "💨 Very windy tonight — hold onto your notes and your dignity.";
+  // Warm evening
+  if(avgTemp>=18) return "🌤️ Warm evening — cider weather. The kind of night you feel guilty being indoors.";
+  // Cold
+  if(avgTemp<5) return "🧊 Bracing stuff tonight. Wear everything you own.";
+  // Default
+  return "🇬🇧 Perfectly adequate British weather. Could be worse, could be better, probably will be both.";
+}
+
 async function loadWeather(postcode){
   const container=document.getElementById('weather-container');
   if(!container)return;
@@ -551,6 +591,7 @@ async function loadWeather(postcode){
     if(!slots.length){container.innerHTML='';return;}
 
     const today=new Date().toLocaleDateString('en-GB',{weekday:'long',day:'numeric',month:'long'});
+    const quip=weatherQuip(slots);
     const slotsHtml=slots.map(s=>`
       <div class="wh-slot">
         <div class="wh-time">${s.time}</div>
@@ -567,6 +608,7 @@ async function loadWeather(postcode){
           <span class="weather-date">${today}</span>
         </div>
         <div class="weather-hours">${slotsHtml}</div>
+        <div style="margin-top:10px;font-size:12px;color:#9a7e6f;font-style:italic;padding-top:8px;border-top:1px solid #ede5dc;">${quip}</div>
       </div>`;
   }catch(e){
     container.innerHTML='';
